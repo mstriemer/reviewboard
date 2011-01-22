@@ -363,6 +363,24 @@ class ReviewCountColumn(Column):
         return "%s#last-review" % review_request.get_absolute_url()
 
 
+class ToMeColumn(Column):
+    """
+    A column showing whether a ReviewRequest is directed at the current user or not.
+    """
+    def __init__(self, label=_("To Me?"),
+                 detailed_label=_("Assigned to Me?"),
+                 *args, **kwargs):
+        Column.__init__(self, label=label, detailed_label=detailed_label,
+                        *args, **kwargs)
+
+    def render_data(self, review_request):
+        if review_request.target_people.filter(
+            pk=self.datagrid.request.user.pk).exists():
+            return 'Yes'
+        else:
+            return 'No'
+
+
 class ReviewRequestDataGrid(DataGrid):
     """
     A datagrid that displays a list of review requests.
@@ -412,6 +430,7 @@ class ReviewRequestDataGrid(DataGrid):
 
     review_id = Column(_("Review ID"), field_name="id", db_field="id",
                        shrink=True, sortable=True, link=True)
+    to_me = ToMeColumn()
 
     def __init__(self, *args, **kwargs):
         self.local_site = kwargs.pop('local_site', None)
@@ -423,7 +442,8 @@ class ReviewRequestDataGrid(DataGrid):
         self.submitter_url_name = "user"
         self.default_sort = ["-last_updated"]
         self.default_columns = [
-            "star", "summary", "submitter", "time_added", "last_updated_since"
+            "star", "summary", "submitter", "time_added",
+            "last_updated_since", "to_me"
         ]
 
     def load_extra_state(self, profile):
@@ -486,7 +506,7 @@ class DashboardDataGrid(ReviewRequestDataGrid):
         self.default_sort = ["-last_updated"]
         self.default_columns = [
             "new_updates", "star", "summary", "submitter",
-            "time_added", "last_updated_since"
+            "time_added", "last_updated_since", "to_me"
         ]
         self.counts = {}
 
