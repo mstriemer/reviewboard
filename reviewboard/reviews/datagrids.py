@@ -367,11 +367,10 @@ class ToMeColumn(Column):
     """
     A column showing whether a ReviewRequest is directed at the current user or not.
     """
-    def __init__(self, label=_("To Me?"),
-                 detailed_label=_("Assigned to Me?"),
-                 *args, **kwargs):
-        Column.__init__(self, label=label, detailed_label=detailed_label,
-                        *args, **kwargs)
+    def __init__(self, label=_("To Me"), detailed_label=_("Assigned to Me"),
+                 shrink=True, sortable=False, *args, **kwargs):
+        super(ToMeColumn, self).__init__(label=label, detailed_label=detailed_label,
+            shrink=shrink, sortable=sortable, *args, **kwargs)
 
     def render_data(self, review_request):
         if review_request.target_people.filter(
