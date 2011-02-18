@@ -267,4 +267,40 @@ $(document).ready(function() {
     $('.star').toggleStar();
 });
 
+function update_floater(bnr)
+{
+    var pos = bnr.parent('.float_me_wrapper').offset();
+    var top = pos.top - $(window).scrollTop();
+    var hgt = $(window).height() - bnr.height();
+    // Above the window frame
+    if (top < 0) {
+        bnr.addClass("offscreen_top");
+        bnr.removeClass("offscreen_bottom");
+    }
+    // Below the window frame
+    else if (top > hgt) {
+        bnr.addClass("offscreen_bottom");
+        bnr.removeClass("offscreen_top");
+    }
+    // In the window frame
+    else {
+        bnr.removeClass("offscreen_top");
+        bnr.removeClass("offscreen_bottom");
+    }
+}
+
+$(document).ready(function() {
+    $('.float_me').each(function() {
+        $(this).wrap('<div class="float_me_wrapper" style="height:' +
+            $(this).outerHeight() + 'px;width:' +
+            $(this).outerWidth() + 'px;" />');
+        update_floater($(this));
+    });
+    $(window).scroll(function() {
+        $('.float_me').each(function() {
+            update_floater($(this));
+        });
+    });
+});
+
 // vim: set et:sw=4:
