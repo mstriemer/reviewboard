@@ -267,37 +267,46 @@ $(document).ready(function() {
     $('.star').toggleStar();
 });
 
-function update_floater(bnr)
-{
-    var pos = bnr.parent('.float_me_wrapper').offset();
-    var top = pos.top - $(window).scrollTop();
-    var hgt = $(window).height() - bnr.height();
-    // Above the window frame
-    if (top < 0) {
-        bnr.addClass("offscreen_top");
-        bnr.removeClass("offscreen_bottom");
+function update_floater(el) {
+    var container = el.closest('.float-element-container');
+    var container_top = container.offset().top;
+    var window_top = $(window).scrollTop();
+    var top = el.parent('.float-element-wrapper').offset().top - window_top;
+    if (container.length == 0 ||
+        (container_top < window_top &&
+            window_top < (container_top +
+                container.outerHeight() - el.outerHeight()))) {
+        // Above the window frame
+        if (top < 0) {
+            el.addClass("offscreen-top");
+            el.removeClass("offscreen-bottom");
+        }
+        // Below the window frame
+        else if (top > $(window).height() - el.outerHeight()) {
+            el.addClass("offscreen-bottom");
+            el.removeClass("offscreen-top");
+        }
+        // In the window frame
+        else {
+            el.removeClass("offscreen-top");
+            el.removeClass("offscreen-bottom");
+        }
     }
-    // Below the window frame
-    else if (top > hgt) {
-        bnr.addClass("offscreen_bottom");
-        bnr.removeClass("offscreen_top");
-    }
-    // In the window frame
     else {
-        bnr.removeClass("offscreen_top");
-        bnr.removeClass("offscreen_bottom");
+        el.removeClass("offscreen-top");
+        el.removeClass("offscreen-bottom");
     }
 }
 
 $(document).ready(function() {
-    $('.float_me').each(function() {
-        $(this).wrap('<div class="float_me_wrapper" style="height:' +
+    $('.float-element').each(function() {
+        $(this).wrap('<div class="float-element-wrapper" style="height:' +
             $(this).outerHeight() + 'px;width:' +
             $(this).outerWidth() + 'px;" />');
         update_floater($(this));
     });
     $(window).scroll(function() {
-        $('.float_me').each(function() {
+        $('.float-element').each(function() {
             update_floater($(this));
         });
     });
