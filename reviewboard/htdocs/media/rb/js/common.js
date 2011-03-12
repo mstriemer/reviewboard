@@ -302,10 +302,10 @@ $(document).ready(function() {
     $('.float-element').each(function() {
         $(this).wrap('<div class="float-element-location" style="height:' +
             $(this).outerHeight() + 'px;width:' +
-            $(this).outerWidth() + 'px;" />')
+            $(this).outerWidth() + 'px;z-index:999;" />')
         .wrap('<div class="float-element-wrapper" style="height:' +
             $(this).outerHeight() + 'px;width:' +
-            $(this).outerWidth() + 'px;" />');
+            $(this).outerWidth() + 'px;z-index:999;" />');
         update_floater($(this));
     });
     $(window).scroll(function() {
