@@ -1,37 +1,56 @@
 from django.http import HttpResponseRedirect, HttpResponse, QueryDict
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, redirect
 from django.template.context import RequestContext
+from django.utils import simplejson
 
-from oauth.models import ConsumerApplication, AuthorizationCode
+from oauth.models import ConsumerApplication, AuthorizationCode, Token
+from oauth.decorators import process_oauth_request
 
-# This is an atrocity
-def authorize(request):
+@process_oauth_request
+def authorize(request, client_id=None, redirect_uri=None,
+              state=None, consumer=None, *args, **kwargs):
     """Grant an OAuth authorization request."""
     if request.method == 'POST':
         # A decision was made
-        consumer = ConsumerApplication.objects.get(
-                    key=request.POST.get('client_id', None))
-        # THIS SHOULD BE SAVED SERVER SIDE FOR SECURITY REASONS!
-        redirect_uri = request.POST.get('redirect_uri', None)
-        if redirect_uri is None:
-            return HttpResponseRedirect('/') # Error, what do we do?
+        authorize = request.POST.get('authorize', None)
+        # I figure this beats throwing 500 errors
+        if authorize != 'Authorize' or consumer is None:
+            return redirect('oauth.views.invalid_request')
         # Create the authorization code
-        authorization_code = AuthorizationCode(consumer=consumer, user=request.user)
-        authorization_code.full_clean()
-        authorization_code.save()
+        authorization_code = consumer.get_authorization_code()
         q = QueryDict('', mutable=True)
         q['code'] = authorization_code.code
-        q['state'] = request.POST.get('state', '')
+        if state is not None:
+            q['state'] = state
         return HttpResponseRedirect('%s?%s' % (redirect_uri, q.urlencode()))
     else:
-        client_id = request.GET.get('client_id', None)
-        redirect_uri = request.GET.get('redirect_uri', None)
-        state = request.GET.get('state', None)
-        if client_id is None:
-            # Error
-            return HttpResponseRedirect(request.META['HTTP_REFERER'])
-        # Ask if they want to authorize
-        consumer = ConsumerApplication.objects.get(key=client_id)
         return render_to_response('oauth/authorize.html',
                 RequestContext(request, {'consumer': consumer,
                     'redirect_uri': redirect_uri, 'state': state}))
+
+@process_oauth_request
+def token(request, client_id=None, client_secret=None, grant_type=None,
+          redirect_uri=None, state=None, consumer=None,
+          authorization_code=None, *args, **kwargs):
+    """Grant an access token for an authorization code."""
+    if request.method == 'POST' and not request.is_secure():
+        # I figure this beats throwing 500 errors
+        if grant_type != 'authorization_code' or client_secret is None or \
+           authorization_code is None or consumer is None:
+            return redirect('oauth.views.invalid_request')
+        if authorization_code.is_active():
+            access_token, refresh_token = \
+                    consumer.get_access_and_request_token()
+            response = {'access_token': access_token.token, 'expires_in': 3600,
+                        'refresh_token': refresh_token.token}
+            return HttpResponse(simplejson.dumps(response))
+        else:
+            return redirect('%s?error=unauthorized_client&state=%s' %
+                                                        (redirect_uri, state))
+    else:
+        return redirect('oauth.views.invalid_request')
+
+def invalid_request(request):
+    """Notify the user that there was an invalid OAuth request."""
+    return render_to_response('oauth/invalid_request.html',
+            RequestContext(request))

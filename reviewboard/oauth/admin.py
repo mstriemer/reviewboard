@@ -1,7 +1,6 @@
 from django.contrib import admin
 
-from reviewboard.oauth.models import ConsumerApplication, RequestToken, \
-                                     AccessToken
+from reviewboard.oauth.models import ConsumerApplication
 
 
 class ConsumerApplicationAdmin(admin.ModelAdmin):
