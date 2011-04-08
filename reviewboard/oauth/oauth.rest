@@ -1,0 +1,38 @@
+Authorization Request::
+
+    The user is sent to RB:
+    
+        GET /oauth/authorize?response_type=code&client_id=aAINia28&
+            redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb&
+            state=2378 HTTP/1.1
+        Host: reviewboard.com
+    
+    The parameters are:
+    
+        response_type [REQUIRED]
+            Must be equal to 'code'
+        client_id [REQUIRED]
+            The client key in the ConsumerApplication table
+        redirect_uri [REQUIRED]
+            May be omitted if already set on the ConsumerApplication model.
+        scope [OPTIONAL]
+            The scope of access to RB (I won't be using this).
+        state [OPTIONAL]
+            Used by the application requesting authorization, must be returned
+            when sending the user to `redirect_uri`.
+
+Authorization Response::
+
+    If the user authorized the application, redirect the user to the provided
+    redirect URI with the authorization code and the application's state.
+    
+        HTTP/1.1 302 Found
+        Location: https://client.example.com/cb?code=i1WsRn1uB1&state=2378
+    
+    The parameters are:
+    
+        code [REQUIRED]
+            The authorization code created for this authorization.
+        state [REQUIRED]
+            The state data sent to RB by the requesting application. Do not
+            modify the data at all, just return it as is.

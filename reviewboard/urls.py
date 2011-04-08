@@ -95,6 +95,7 @@ localsite_urlpatterns = patterns('',
 # Main includes
 urlpatterns += patterns('',
     (r'^account/', include('reviewboard.accounts.urls')),
+    (r'^oauth/', include('reviewboard.oauth.urls')),
 
     (r'^s/(?P<local_site_name>[A-Za-z0-9\-_.]+)/',
      include(localsite_urlpatterns)),

@@ -1,0 +1,11 @@
+1) Consumer Application (CA) registers with RB
+2) A user tries to use the CA and the CA requires authentication
+3) CA starts the authorization process
+    a) The CA requests an 'access_token' (and 'refresh_token') from RB
+    b) RB responds with an 'access_token' and 'refresh_token'
+    c) The CA sends the user to RB along with the 'access_token' to authenticate
+    d) The user grants the CA access to RB
+    e) RB redirects the user to the CA's 'callback_uri'
+    f) The CA uses its 'access_token' to receive a 'request_token'
+3) The 'request_token' is used to access the RB API
+4) The 'request_token' expires and the 'refresh_token' is used to receive a new 'request_token' (and 'refresh_token')
