@@ -1,3 +1,5 @@
+from oauth.decorators import oauth_login_required
+
 import logging
 import time
 from datetime import datetime
@@ -569,7 +571,7 @@ def group_list(request,
     grid = GroupDataGrid(request, local_site=local_site)
     return grid.render_to_response(template_name)
 
-
+@oauth_login_required
 @login_required
 @valid_prefs_required
 def dashboard(request,

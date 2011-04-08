@@ -9,7 +9,8 @@ SECRET_LENGTH = 40
 KEY_OPTION_CHARACTERS = list('abcdefghijklmnopqrstuvwxyz'
                              'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
                              '0123456789')
-AUTHORIZATION_DAYS = 30
+AUTHORIZATION_HOURS = 1
+ACCESS_DAYS = 30
 REFRESH_DAYS = 60
 
 def generate_random_string(size):
@@ -67,6 +68,10 @@ class ConsumerApplication(models.Model):
         refresh.save()
         return access, refresh
 
+    def __unicode__(self):
+        """Return a unicode version of self."""
+        return '%s by %s' % (self.name, self.author)
+
 class AuthorizationCode(models.Model):
     """
     An OAuth authorization code, may be revoked for an access token later.
@@ -80,7 +85,7 @@ class AuthorizationCode(models.Model):
     def is_active(self):
         """Check if an authorization code is still valid."""
         return (self.authorized and self.creation_date +
-                timedelta(days=AUTHORIZATION_DAYS) > datetime.now())
+                timedelta(hours=AUTHORIZATION_HOURS) > datetime.now())
 
 
 class Token(models.Model):
@@ -95,3 +100,8 @@ class Token(models.Model):
     token_type = models.CharField(max_length=30)
     creation_date = models.DateTimeField(default=datetime.now)
     authorized = models.BooleanField(default=True)
+
+    def is_active(self):
+        """Check if an authorization code is still valid."""
+        return (self.authorized and self.creation_date +
+                timedelta(days=ACCESS_DAYS) > datetime.now())

@@ -1,5 +1,6 @@
+from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
-from oauth.models import ConsumerApplication, AuthorizationCode
+from oauth.models import ConsumerApplication, AuthorizationCode, Token
 
 def process_oauth_request(fn):
     """Process and OAuth request and return the consumer or an error."""
@@ -28,4 +29,20 @@ def process_oauth_request(fn):
             return redirect('oauth.views.invalid_request')
         kwargs.update(oauth)
         return fn(request, *args, **kwargs)
+    return inner
+
+def oauth_login_required(fn):
+    """Require OAuth login for access to fn."""
+    def inner(request, *args, **kwargs):
+        # We don't really care what method is being used
+        token = request.REQUEST.get('token', None)
+        if token is not None:
+            try:
+                access_token = Token.objects.get(token=token,
+                                                 token_type='access')
+            except Token.DoesNotExist:
+                access_token = None
+            if access_token is not None:
+                return fn(request, *args, **kwargs)
+        return HttpResponseForbidden('OAuth authentication is required.')
     return inner

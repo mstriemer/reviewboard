@@ -1,4 +1,5 @@
-from django.http import HttpResponseRedirect, HttpResponse, QueryDict
+from django.http import HttpResponseRedirect, HttpResponse, \
+                        HttpResponseForbidden, QueryDict
 from django.shortcuts import render_to_response, redirect
 from django.template.context import RequestContext
 from django.utils import simplejson
@@ -14,8 +15,10 @@ def authorize(request, client_id=None, redirect_uri=None,
         # A decision was made
         authorize = request.POST.get('authorize', None)
         # I figure this beats throwing 500 errors
-        if authorize != 'Authorize' or consumer is None:
+        if consumer is None:
             return redirect('oauth.views.invalid_request')
+        if authorize != 'Authorize':
+            return redirect('%s?%s' % (consumer.redirect_uri, 'error='))
         # Create the authorization code
         authorization_code = consumer.get_authorization_code()
         q = QueryDict('', mutable=True)
@@ -41,9 +44,11 @@ def token(request, client_id=None, client_secret=None, grant_type=None,
         if authorization_code.is_active():
             access_token, refresh_token = \
                     consumer.get_access_and_request_token()
-            response = {'access_token': access_token.token, 'expires_in': 3600,
-                        'refresh_token': refresh_token.token}
-            return HttpResponse(simplejson.dumps(response))
+            response = QueryDict('', mutable=True)
+            response['access_token'] = access_token.token
+            # response['expires_in'] = 3600
+            response['refresh_token'] = refresh_token.token
+            return HttpResponse(response.urlencode())
         else:
             return redirect('%s?error=unauthorized_client&state=%s' %
                                                         (redirect_uri, state))
@@ -54,3 +59,17 @@ def invalid_request(request):
     """Notify the user that there was an invalid OAuth request."""
     return render_to_response('oauth/invalid_request.html',
             RequestContext(request))
+
+def protected(request):
+    """A 'protected' resource."""
+    token = request.REQUEST.get('token', None)
+    if token is None:
+        return HttpResponseForbidden('You are not authorized to access this resource (no token provided)')
+    try:
+        access_token = Token.objects.get(token=token, token_type='access')
+    except Token.DoesNotExist:
+        return HttpResponseForbidden('You are not authorized to access this resource (token does not exist)')
+    if access_token.is_active():
+        return HttpResponse('The protected resource is: "(ReviewBoard + OAuth-2.0) / 2.0 = 2:47AM"')
+    else:
+        return HttpResponseForbidden('You are not authrized to access this resource (token is no longer active)')

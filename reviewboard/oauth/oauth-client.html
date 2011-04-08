@@ -2,7 +2,12 @@
 <html>
     <head>
         <title>OAuth 2.0 Client</title>
+        <style>
+            div {background: #009AD6; width: 350px;}
+            
+        </style>
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js"></script>
+        <script type="text/javascript" src="http://127.0.0.1:8080/media/rb/js/oauth-client.js"></script>
         <script type="text/javascript">
             $.support.cors = true;
 
@@ -23,51 +28,34 @@
                 $('#access_token').val(getParameterByName('access_token'));
                 $('#refresh_token').val(getParameterByName('refresh_token'));
             });
-
-            function access_token_error(jqXHR, textStatus, errorThrown) {
-                alert('Status: ' + textStatus + '. Request unsuccessful. (' + errorThrown + ')');
-            }
-
-            function got_access_token(data, textStatus, jqXHR) {
-                $('#access_token').val(data.access_token);
-                $('#refresh_token').val(data.refresh_token);
-            }
-
-            function get_access_token() {
-                $.ajax({
-                    url: 'http://127.0.0.1:8080/oauth/token/',
-                    type: 'POST',
-                    data: {
-                        'grant_type': 'authorization_code',
-                        'redirect_uri': 'http://striemer.ca/oauth-client.html',
-                        'client_id': $('#client_id').val(),
-                        'client_secret': $('#client_secret').val(),
-                        'code': $('#code').val()
-                    },
-                    success: got_access_token,
-                    error: access_token_error
-                });
-            }
         </script>
     </head>
     <body>
-        <p><a href="http://127.0.0.1:8080/oauth/authorize/?response_type=code&amp;client_id=test&amp;redirect_uri=http://striemer.ca/oauth-client.html">Authorize with ReviewBoard</a></p>
-        <p>Request access and refresh tokens</p>
-        <form action="http://127.0.0.1:8080/oauth/token/" method="post">
-            <input type="hidden" name="grant_type" value="authorization_code" />
-            <input type="hidden" name="redirect_uri" value="http://striemer.ca/oauth-client.html" />
-            <label for="client_id">Client id:</label> <input type="text" id="client_id" name="client_id" value="test" /><br />
-            <label for="client_secret">Client secret:</label> <input type="text" id="client_secret" name="client_secret" value="terces" /><br />
-            <label for="code">Code:</label> <input type="text" id="code" name="code" value="code" /><br />
-            <input type="submit" value="Get access token" />
-        </form>
-        <br />
-        <form action="http://127.0.0.1:8080/oauth/protected/">
-            <input type="hidden" name="client_id" id="protected_client_id" value="" />
-            <label for="access_token">Access token:</label> <input type="text" id="access_token" name="access_token" value="" /><br />
-            <label for="refresh_token">Refresh token:</label> <input type="text" id="refresh_token" name="refresh_token" value="" /><br />
-            <input type="submit" value="Get protected resource" onclick="$('#protected_client_id').val($('#client_id').val());" />
-        </form>
+        <h1>OAuth 2.0 Client</h1>
+        <div id="authorize">
+            <h2>Request Authorization</h2>
+            <p><a href="http://127.0.0.1:8080/oauth/authorize/?response_type=code&amp;client_id=test&amp;redirect_uri=http://striemer.ca/oauth-client.html">Authorize with ReviewBoard</a></p>
+        </div>
+        <div id="request-access">
+            <h2>Request Access Code</h2>
+            <p>Request access and refresh tokens</p>
+            <form action="http://127.0.0.1:8080/oauth/token/" method="post">
+                <input type="hidden" name="grant_type" value="authorization_code" />
+                <input type="hidden" name="redirect_uri" value="http://striemer.ca/oauth-client.html" />
+                <label for="client_id">Client id:</label> <input type="text" id="client_id" name="client_id" value="test" /><br />
+                <label for="client_secret">Client secret:</label> <input type="text" id="client_secret" name="client_secret" value="terces" /><br />
+                <label for="code">Code:</label> <input type="text" id="code" name="code" value="code" /><br />
+                <input type="submit" value="Get access token" />
+            </form>
+        </div>
+        <div class="protected">
+            <h2>Access the Protected resource</h2>
+            <form action="http://127.0.0.1:8080/dashboard/">
+                <label for="access_token">Access token:</label> <input type="text" id="access_token" name="token" value="" /><br />
+                <label for="refresh_token">Refresh token:</label> <input type="text" id="refresh_token" name="refresh_token" value="" /><br />
+                <input type="submit" value="Get protected resource" />
+            </form>
+        </div>
     </body>
 </html>
 
